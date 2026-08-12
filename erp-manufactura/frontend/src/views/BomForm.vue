@@ -42,43 +42,45 @@
             </button>
           </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Secuencia</th>
-                <th>Producto ID</th>
-                <th>Cantidad</th>
-                <th>Unidad</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(linea, index) in form.lineas" :key="index">
-                <td>
-                  <input v-model.number="linea.secuencia" type="number" style="width: 80px;" />
-                </td>
-                <td>
-                  <input v-model.number="linea.producto_id" type="number" required style="width: 120px;" />
-                </td>
-                <td>
-                  <input v-model.number="linea.cantidad" type="number" step="0.01" min="0" style="width: 100px;" />
-                </td>
-                <td>
-                  <input v-model="linea.producto_uom" type="text" style="width: 120px;" />
-                </td>
-                <td>
-                  <button type="button" class="btn btn-sm btn-danger" @click="removeLinea(index)">
-                    X
-                  </button>
-                </td>
-              </tr>
-              <tr v-if="form.lineas.length === 0">
-                <td colspan="5" style="text-align: center; color: var(--color-gray);">
-                  Sin lineas. Haga clic en "+ Agregar Linea"
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Secuencia</th>
+                  <th>Producto ID</th>
+                  <th>Cantidad</th>
+                  <th>Unidad</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(linea, index) in form.lineas" :key="index">
+                  <td>
+                    <input v-model.number="linea.secuencia" type="number" style="width: 80px;" />
+                  </td>
+                  <td>
+                    <input v-model.number="linea.producto_id" type="number" required style="width: 120px;" />
+                  </td>
+                  <td>
+                    <input v-model.number="linea.cantidad" type="number" step="0.01" min="0" style="width: 100px;" />
+                  </td>
+                  <td>
+                    <input v-model="linea.producto_uom" type="text" style="width: 120px;" />
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-danger" @click="removeLinea(index)">
+                      X
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="form.lineas.length === 0">
+                  <td colspan="5" style="text-align: center; color: var(--color-gray);">
+                    Sin lineas. Haga clic en "+ Agregar Linea"
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div class="flex gap-2 mt-4">

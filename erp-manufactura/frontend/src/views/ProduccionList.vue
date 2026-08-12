@@ -17,7 +17,8 @@
     </div>
 
     <div class="table-container">
-      <table>
+      <div class="table-wrapper">
+        <table>
         <thead>
           <tr>
             <th>Referencia</th>
@@ -84,7 +85,8 @@
             </td>
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
 
     <ConfirmDialog

@@ -1,16 +1,22 @@
 <template>
   <nav class="navbar">
     <div class="navbar-brand">
+      <button class="hamburger" @click="$emit('toggle-sidebar')">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <span class="logo-icon">&#9881;</span>
       <h1>ERP Manufactura</h1>
     </div>
     <div class="navbar-info">
-      <span>v1.0.0</span>
+      <span class="version">v1.0.0</span>
     </div>
   </nav>
 </template>
 
 <script setup>
+defineEmits(['toggle-sidebar'])
 </script>
 
 <style scoped>
@@ -36,6 +42,24 @@
   gap: 12px;
 }
 
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--color-white);
+  border-radius: 2px;
+}
+
 .logo-icon {
   font-size: 24px;
 }
@@ -48,5 +72,23 @@
 .navbar-info {
   font-size: 13px;
   opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .navbar-brand h1 {
+    font-size: 16px;
+  }
+
+  .version {
+    display: none;
+  }
 }
 </style>
