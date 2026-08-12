@@ -24,6 +24,12 @@ def listar_ordenes(
     return OrdenTrabajoService.get_all(db, skip=skip, limit=limit, estado=estado)
 
 
+@router.get("/next-code")
+def siguiente_codigo_orden(db: Session = Depends(get_db)):
+    """Retorna el proximo codigo que se generara para una nueva orden."""
+    return {"codigo": OrdenTrabajoService._generar_nombre(db)}
+
+
 @router.get("/{orden_id}", response_model=OrdenTrabajoResponse)
 def obtener_orden(orden_id: int, db: Session = Depends(get_db)):
     """Obtiene una orden de trabajo por ID."""

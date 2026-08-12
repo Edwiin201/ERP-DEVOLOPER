@@ -18,6 +18,12 @@ def listar_boms(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return BOMService.get_all(db, skip=skip, limit=limit)
 
 
+@router.get("/next-code")
+def siguiente_codigo_bom(db: Session = Depends(get_db)):
+    """Retorna el proximo codigo que se generara para un nuevo BOM."""
+    return {"codigo": BOMService._generar_codigo(db)}
+
+
 @router.get("/{bom_id}", response_model=BOMResponse)
 def obtener_bom(bom_id: int, db: Session = Depends(get_db)):
     """Obtiene un BOM por ID incluyendo sus lineas."""

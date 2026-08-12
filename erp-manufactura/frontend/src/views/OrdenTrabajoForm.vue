@@ -8,8 +8,8 @@
     <div class="table-container p-4" style="max-width: 700px;">
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label>Nombre *</label>
-          <input v-model="form.nombre" type="text" required placeholder="Nombre de la orden" />
+          <label>Codigo</label>
+          <input v-model="form.nombre" type="text" readonly class="input-readonly" placeholder="Se genera automaticamente" />
         </div>
 
         <div class="flex gap-4">
@@ -18,7 +18,7 @@
             <select v-model.number="form.produccion_id" required>
               <option :value="null">Seleccionar...</option>
               <option v-for="prod in producciones" :key="prod.id" :value="prod.id">
-                {{ prod.nombre }} - {{ prod.producto_id }}
+                {{ prod.nombre }}
               </option>
             </select>
           </div>
@@ -30,6 +30,7 @@
                 {{ ct.nombre }}
               </option>
             </select>
+            <a v-if="centros.length === 0" href="/centros-trabajo/nuevo" class="link-action">Crear centro</a>
           </div>
         </div>
 
@@ -90,6 +91,10 @@ async function loadFormData() {
     ])
     producciones.value = prodsData
     centros.value = centrosData
+    if (!isEdit.value) {
+      const next = await api.get('/api/ordenes-trabajo/next-code')
+      form.value.nombre = next.codigo
+    }
   } catch (err) {
     console.error('Error cargando datos auxiliares:', err)
   }
@@ -139,3 +144,16 @@ onMounted(async () => {
   await loadOrden()
 })
 </script>
+
+<style scoped>
+.link-action {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-primary);
+}
+
+.link-action:hover {
+  text-decoration: underline;
+}
+</style>

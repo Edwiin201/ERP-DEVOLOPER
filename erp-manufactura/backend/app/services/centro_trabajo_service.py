@@ -4,7 +4,7 @@ Contiene toda la logica de negocio y validaciones.
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 from fastapi import HTTPException
 from app.models.centro_trabajo import CentroTrabajo
 from app.schemas.centro_trabajo import CentroTrabajoCreate, CentroTrabajoUpdate
@@ -12,6 +12,14 @@ from app.schemas.centro_trabajo import CentroTrabajoCreate, CentroTrabajoUpdate
 
 class CentroTrabajoService:
     """CRUD + validaciones para centros de trabajo."""
+
+    @staticmethod
+    def _generar_codigo(db: Session) -> str:
+        """Genera codigo automatico tipo 'CT-00001' basado en el count actual."""
+        stmt = select(func.count(CentroTrabajo.id))
+        total = db.scalar(stmt) or 0
+        secuencia = total + 1
+        return f"CT-{secuencia:05d}"
 
     @staticmethod
     def get_all(db: Session, skip: int = 0, limit: int = 100) -> list[CentroTrabajo]:
@@ -26,17 +34,12 @@ class CentroTrabajoService:
 
     @staticmethod
     def create(db: Session, data: CentroTrabajoCreate) -> CentroTrabajo:
-        """Crea un nuevo centro de trabajo validando codigo unico."""
-        # Verificar que el codigo no exista
-        stmt = select(CentroTrabajo).where(CentroTrabajo.codigo == data.codigo)
-        existing = db.scalar(stmt)
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Ya existe un centro de trabajo con codigo '{data.codigo}'",
-            )
+        """Crea un nuevo centro de trabajo con codigo auto-generado."""
+        codigo = CentroTrabajoService._generar_codigo(db)
+        centro_data = data.model_dump()
+        centro_data["codigo"] = codigo
 
-        centro = CentroTrabajo(**data.model_dump())
+        centro = CentroTrabajo(**centro_data)
         db.add(centro)
         db.commit()
         db.refresh(centro)

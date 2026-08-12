@@ -9,9 +9,6 @@
       <span class="logo-icon">&#9881;</span>
       <h1>ERP Manufactura</h1>
     </div>
-    <div class="navbar-info">
-      <span class="version">v1.0.0</span>
-    </div>
   </nav>
 </template>
 
@@ -69,11 +66,6 @@ defineEmits(['toggle-sidebar'])
   font-weight: 600;
 }
 
-.navbar-info {
-  font-size: 13px;
-  opacity: 0.7;
-}
-
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
@@ -85,10 +77,6 @@ defineEmits(['toggle-sidebar'])
 
   .navbar-brand h1 {
     font-size: 16px;
-  }
-
-  .version {
-    display: none;
   }
 }
 </style>

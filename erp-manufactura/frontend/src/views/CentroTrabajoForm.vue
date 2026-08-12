@@ -13,8 +13,8 @@
         </div>
 
         <div class="form-group">
-          <label>Codigo *</label>
-          <input v-model="form.codigo" type="text" required placeholder="CT-001" />
+          <label>Codigo</label>
+          <input v-model="form.codigo" type="text" readonly class="input-readonly" placeholder="Se genera automaticamente" />
         </div>
 
         <div class="form-group">
@@ -27,10 +27,10 @@
           <input v-model.number="form.costo_hora" type="number" step="0.01" min="0" />
         </div>
 
-        <div class="form-group">
-          <label>
+        <div class="form-group form-group-checkbox">
+          <label class="checkbox-label">
             <input v-model="form.activo" type="checkbox" />
-            Activo
+            <span>Activo</span>
           </label>
         </div>
 
@@ -72,7 +72,15 @@ const form = ref({
 })
 
 async function loadCentro() {
-  if (!isEdit.value) return
+  if (!isEdit.value) {
+    try {
+      const next = await api.get('/api/centros-trabajo/next-code')
+      form.value.codigo = next.codigo
+    } catch (err) {
+      console.error('Error cargando preview:', err)
+    }
+    return
+  }
   try {
     const data = await api.get(`/api/centros-trabajo/${route.params.id}`)
     form.value = {

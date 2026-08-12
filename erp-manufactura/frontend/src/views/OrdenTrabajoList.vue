@@ -21,25 +21,25 @@
         <table>
         <thead>
           <tr>
-            <th>Nombre</th>
+            <th>Codigo</th>
             <th>Produccion</th>
             <th>Centro Trabajo</th>
             <th>Estado</th>
-            <th>Duracion Esperada</th>
-            <th>Duracion Real</th>
+            <th>Dur. Esperada</th>
+            <th>Dur. Real</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="orden in ordenes" :key="orden.id">
-            <td><strong>{{ orden.nombre }}</strong></td>
+            <td>{{ orden.nombre }}</td>
             <td>MO-{{ orden.produccion_id }}</td>
             <td>{{ getCentroNombre(orden.centro_trabajo_id) }}</td>
             <td><StatusBadge :status="orden.estado" type="orden_trabajo" /></td>
-            <td>{{ orden.duracion_esperada ? `${orden.duracion_esperada} min` : '-' }}</td>
-            <td>{{ orden.duracion_real ? `${orden.duracion_real} min` : '-' }}</td>
+            <td>{{ orden.duracion_esperada ? `${formatNumber(orden.duracion_esperada)} min` : '-' }}</td>
+            <td>{{ orden.duracion_real ? `${formatNumber(orden.duracion_real)} min` : '-' }}</td>
             <td>
-              <div class="flex gap-2">
+              <div class="flex gap-2 actions-cell">
                 <button
                   v-if="['pendiente', 'listo'].includes(orden.estado)"
                   class="btn btn-sm btn-warning"
@@ -99,6 +99,7 @@ import { ref, onMounted } from 'vue'
 import { api } from '../api/index.js'
 import StatusBadge from '../components/StatusBadge.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { formatNumber } from '../utils/format.js'
 
 const ordenes = ref([])
 const centros = ref([])

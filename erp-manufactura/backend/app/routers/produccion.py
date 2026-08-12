@@ -24,6 +24,12 @@ def listar_producciones(
     return ProduccionService.get_all(db, skip=skip, limit=limit, estado=estado)
 
 
+@router.get("/next-code")
+def siguiente_codigo_produccion(db: Session = Depends(get_db)):
+    """Retorna el proximo codigo que se generara para una nueva produccion."""
+    return {"codigo": ProduccionService._generar_nombre(db)}
+
+
 @router.get("/{produccion_id}", response_model=ProduccionResponse)
 def obtener_produccion(produccion_id: int, db: Session = Depends(get_db)):
     """Obtiene una produccion por ID."""

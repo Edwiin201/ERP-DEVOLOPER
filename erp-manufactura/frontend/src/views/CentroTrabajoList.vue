@@ -24,11 +24,11 @@
           <tr v-for="centro in centros" :key="centro.id">
             <td>{{ centro.codigo }}</td>
             <td>{{ centro.nombre }}</td>
-            <td>{{ centro.capacidad }}</td>
-            <td>${{ centro.costo_hora }}</td>
+            <td>{{ formatNumber(centro.capacidad) }}</td>
+            <td>{{ formatCurrency(centro.costo_hora) }}</td>
             <td>{{ centro.activo ? 'Si' : 'No' }}</td>
             <td>
-              <div class="flex gap-2">
+              <div class="flex gap-2 actions-cell">
                 <router-link
                   :to="`/centros-trabajo/${centro.id}/editar`"
                   class="btn btn-sm btn-primary"
@@ -65,6 +65,7 @@
 import { ref, onMounted } from 'vue'
 import { api } from '../api/index.js'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { formatNumber, formatCurrency } from '../utils/format.js'
 
 const centros = ref([])
 const showConfirm = ref(false)

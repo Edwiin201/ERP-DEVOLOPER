@@ -7,22 +7,33 @@
 
     <div class="table-container p-4" style="max-width: 700px;">
       <form @submit.prevent="handleSubmit">
-        <div class="flex gap-4">
-          <div class="form-group" style="flex: 1;">
-            <label>Producto ID *</label>
-            <input v-model.number="form.producto_id" type="number" required />
-          </div>
-          <div class="form-group" style="flex: 1;">
-            <label>Cantidad *</label>
-            <input v-model.number="form.cantidad" type="number" step="0.01" min="0" required />
-          </div>
+        <div class="form-group">
+          <label>Codigo</label>
+          <input v-model="form.nombre" type="text" readonly class="input-readonly" placeholder="Se genera automaticamente" />
+        </div>
+
+        <div class="form-group">
+          <label>Producto *</label>
+          <select v-model.number="form.producto_id" required>
+            <option :value="null">Seleccionar producto...</option>
+            <option v-for="prod in productos" :key="prod.id" :value="prod.id">
+              {{ prod.nombre }} ({{ prod.tipo === 'producto_final' ? 'PF' : 'MP' }})
+            </option>
+          </select>
         </div>
 
         <div class="flex gap-4">
           <div class="form-group" style="flex: 1;">
-            <label>Unidad de Medida</label>
-            <input v-model="form.producto_uom" type="text" placeholder="unidades" />
+            <label>Cantidad *</label>
+            <input v-model.number="form.cantidad" type="number" step="0.01" min="0" required />
           </div>
+          <div class="form-group" style="flex: 1;">
+            <label>Unidad de Medida</label>
+            <input v-model="form.producto_uom" type="text" placeholder="ej: unidades, kg, litros, metros" />
+          </div>
+        </div>
+
+        <div class="flex gap-4">
           <div class="form-group" style="flex: 1;">
             <label>BOM</label>
             <select v-model.number="form.bom_id">
@@ -31,10 +42,8 @@
                 {{ bom.nombre }}
               </option>
             </select>
+            <a v-if="boms.length === 0" href="/boms/nuevo" class="link-action">Crear BOM</a>
           </div>
-        </div>
-
-        <div class="flex gap-4">
           <div class="form-group" style="flex: 1;">
             <label>Centro de Trabajo</label>
             <select v-model.number="form.centro_trabajo_id">
@@ -43,16 +52,19 @@
                 {{ ct.nombre }}
               </option>
             </select>
+            <a v-if="centros.length === 0" href="/centros-trabajo/nuevo" class="link-action">Crear centro</a>
           </div>
+        </div>
+
+        <div class="flex gap-4">
           <div class="form-group" style="flex: 1;">
             <label>Fecha Inicio</label>
             <input v-model="form.fecha_inicio" type="datetime-local" />
           </div>
-        </div>
-
-        <div class="form-group">
-          <label>Fecha Fin</label>
-          <input v-model="form.fecha_fin" type="datetime-local" />
+          <div class="form-group" style="flex: 1;">
+            <label>Fecha Fin</label>
+            <input v-model="form.fecha_fin" type="datetime-local" />
+          </div>
         </div>
 
         <div class="form-group">
@@ -68,6 +80,14 @@
         </div>
       </form>
     </div>
+
+    <button class="fab" @click="showProductoModal = true" title="Nuevo Producto">+</button>
+
+    <CreateProductoModal
+      :visible="showProductoModal"
+      @confirm="onProductoCreated"
+      @cancel="showProductoModal = false"
+    />
   </div>
 </template>
 
@@ -75,16 +95,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api/index.js'
+import CreateProductoModal from '../components/CreateProductoModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
+const productos = ref([])
 const boms = ref([])
 const centros = ref([])
+const showProductoModal = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
 
 const form = ref({
+  nombre: '',
   producto_id: null,
   cantidad: 1.0,
   producto_uom: '',
@@ -97,12 +121,18 @@ const form = ref({
 
 async function loadFormData() {
   try {
-    const [bomsData, centrosData] = await Promise.all([
+    const [prodsData, bomsData, centrosData] = await Promise.all([
+      api.get('/api/productos'),
       api.get('/api/boms'),
       api.get('/api/centros-trabajo'),
     ])
+    productos.value = prodsData
     boms.value = bomsData
     centros.value = centrosData
+    if (!isEdit.value) {
+      const next = await api.get('/api/producciones/next-code')
+      form.value.nombre = next.codigo
+    }
   } catch (err) {
     console.error('Error cargando datos auxiliares:', err)
   }
@@ -113,6 +143,7 @@ async function loadProduccion() {
   try {
     const data = await api.get(`/api/producciones/${route.params.id}`)
     form.value = {
+      nombre: data.nombre,
       producto_id: data.producto_id,
       cantidad: parseFloat(data.cantidad),
       producto_uom: data.producto_uom || '',
@@ -127,11 +158,10 @@ async function loadProduccion() {
   }
 }
 
-function formatDateTimeLocal(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  const pad = n => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+function onProductoCreated(nuevo) {
+  productos.value.push(nuevo)
+  form.value.producto_id = nuevo.id
+  showProductoModal.value = false
 }
 
 async function handleSubmit() {

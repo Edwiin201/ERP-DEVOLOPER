@@ -21,23 +21,27 @@
         <table>
         <thead>
           <tr>
-            <th>Referencia</th>
-            <th>Producto ID</th>
+            <th>Codigo</th>
+            <th>Producto</th>
             <th>Cantidad</th>
+            <th>Centro</th>
             <th>Estado</th>
             <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="prod in producciones" :key="prod.id">
-            <td><strong>{{ prod.nombre }}</strong></td>
-            <td>{{ prod.producto_id }}</td>
-            <td>{{ prod.cantidad }} {{ prod.producto_uom || '' }}</td>
+            <td>{{ prod.nombre }}</td>
+            <td>{{ getProductoNombre(prod.producto_id) }}</td>
+            <td>{{ formatNumber(prod.cantidad) }} {{ prod.producto_uom || '' }}</td>
+            <td>{{ getCentroNombre(prod.centro_trabajo_id) }}</td>
             <td><StatusBadge :status="prod.estado" type="produccion" /></td>
             <td>{{ formatDate(prod.fecha_inicio) }}</td>
+            <td>{{ formatDate(prod.fecha_fin) }}</td>
             <td>
-              <div class="flex gap-2">
+              <div class="flex gap-2 actions-cell">
                 <button
                   v-if="prod.estado === 'borrador'"
                   class="btn btn-sm btn-info"
@@ -80,7 +84,7 @@
             </td>
           </tr>
           <tr v-if="producciones.length === 0">
-            <td colspan="6" style="text-align: center; color: var(--color-gray);">
+            <td colspan="8" style="text-align: center; color: var(--color-gray);">
               No hay producciones registradas
             </td>
           </tr>
@@ -104,8 +108,11 @@ import { ref, onMounted } from 'vue'
 import { api } from '../api/index.js'
 import StatusBadge from '../components/StatusBadge.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { formatNumber } from '../utils/format.js'
 
 const producciones = ref([])
+const productos = ref([])
+const centros = ref([])
 const filtroEstado = ref('')
 const showConfirm = ref(false)
 const prodSeleccionado = ref(null)
@@ -116,6 +123,34 @@ async function loadProducciones() {
     producciones.value = await api.get('/api/producciones', params)
   } catch (err) {
     alert(err.message)
+  }
+}
+
+async function loadProductos() {
+  try {
+    productos.value = await api.get('/api/productos')
+  } catch (err) {
+    console.error('Error cargando productos:', err)
+  }
+}
+
+function getProductoNombre(id) {
+  if (!id) return '-'
+  const prod = productos.value.find(p => p.id === id)
+  return prod ? prod.nombre : `Prod-${id}`
+}
+
+function getCentroNombre(id) {
+  if (!id) return '-'
+  const centro = centros.value.find(c => c.id === id)
+  return centro ? centro.nombre : `CT-${id}`
+}
+
+async function loadCentros() {
+  try {
+    centros.value = await api.get('/api/centros-trabajo')
+  } catch (err) {
+    console.error('Error cargando centros:', err)
   }
 }
 
@@ -149,7 +184,9 @@ async function handleDelete() {
   }
 }
 
-onMounted(loadProducciones)
+onMounted(async () => {
+  await Promise.all([loadProducciones(), loadProductos(), loadCentros()])
+})
 </script>
 
 <style scoped>

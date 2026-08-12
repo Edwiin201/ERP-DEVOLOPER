@@ -4,7 +4,7 @@ Maneja transiciones de estado y calculo de duracion real.
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 from datetime import datetime
 from decimal import Decimal
 from fastapi import HTTPException
@@ -14,6 +14,14 @@ from app.schemas.orden_trabajo import OrdenTrabajoCreate, OrdenTrabajoUpdate
 
 class OrdenTrabajoService:
     """CRUD + transiciones de estado para ordenes de trabajo."""
+
+    @staticmethod
+    def _generar_nombre(db: Session) -> str:
+        """Genera nombre automatico tipo 'OT-00001' basado en el count actual."""
+        stmt = select(func.count(OrdenTrabajo.id))
+        total = db.scalar(stmt) or 0
+        secuencia = total + 1
+        return f"OT-{secuencia:05d}"
 
     @staticmethod
     def get_all(
@@ -33,8 +41,10 @@ class OrdenTrabajoService:
 
     @staticmethod
     def create(db: Session, data: OrdenTrabajoCreate) -> OrdenTrabajo:
-        """Crea una orden de trabajo con estado 'pendiente' por defecto."""
+        """Crea una orden de trabajo con nombre auto-generado y estado 'pendiente'."""
+        nombre = OrdenTrabajoService._generar_nombre(db)
         orden_data = data.model_dump()
+        orden_data["nombre"] = nombre
         orden_data["estado"] = "pendiente"
 
         orden = OrdenTrabajo(**orden_data)

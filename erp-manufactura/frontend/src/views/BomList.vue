@@ -21,8 +21,9 @@
           <tr>
             <th>Codigo</th>
             <th>Nombre</th>
-            <th>Producto ID</th>
+            <th>Producto</th>
             <th>Cantidad</th>
+            <th>UOM</th>
             <th>Estado</th>
             <th>Acciones</th>
           </tr>
@@ -31,11 +32,12 @@
           <tr v-for="bom in boms" :key="bom.id">
             <td>{{ bom.codigo || '-' }}</td>
             <td>{{ bom.nombre }}</td>
-            <td>{{ bom.producto_id }}</td>
-            <td>{{ bom.cantidad }}</td>
+            <td>{{ getProductoNombre(bom.producto_id) }}</td>
+            <td>{{ formatNumber(bom.cantidad) }}</td>
+            <td>{{ bom.producto_uom || '-' }}</td>
             <td><StatusBadge :status="bom.estado" type="bom" /></td>
             <td>
-              <div class="flex gap-2">
+              <div class="flex gap-2 actions-cell">
                 <router-link :to="`/boms/${bom.id}/editar`" class="btn btn-sm btn-primary">
                   Editar
                 </router-link>
@@ -60,7 +62,7 @@
             </td>
           </tr>
           <tr v-if="boms.length === 0">
-            <td colspan="6" style="text-align: center; color: var(--color-gray);">
+            <td colspan="7" style="text-align: center; color: var(--color-gray);">
               No hay BOMs registrados
             </td>
           </tr>
@@ -84,8 +86,10 @@ import { ref, onMounted } from 'vue'
 import { api } from '../api/index.js'
 import StatusBadge from '../components/StatusBadge.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+import { formatNumber } from '../utils/format.js'
 
 const boms = ref([])
+const productos = ref([])
 const filtroEstado = ref('')
 const showConfirm = ref(false)
 const bomSeleccionado = ref(null)
@@ -97,6 +101,20 @@ async function loadBoms() {
   } catch (err) {
     alert(err.message)
   }
+}
+
+async function loadProductos() {
+  try {
+    productos.value = await api.get('/api/productos')
+  } catch (err) {
+    console.error('Error cargando productos:', err)
+  }
+}
+
+function getProductoNombre(id) {
+  if (!id) return '-'
+  const prod = productos.value.find(p => p.id === id)
+  return prod ? prod.nombre : `Prod-${id}`
 }
 
 async function activarBom(id) {
@@ -133,5 +151,7 @@ async function handleDelete() {
   }
 }
 
-onMounted(loadBoms)
+onMounted(async () => {
+  await Promise.all([loadBoms(), loadProductos()])
+})
 </script>

@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.routers import (
+    producto_router,
     centro_trabajo_router,
     bom_router,
     produccion_router,
@@ -32,6 +33,7 @@ app.add_middleware(
 )
 
 # Registrar routers
+app.include_router(producto_router)
 app.include_router(centro_trabajo_router)
 app.include_router(bom_router)
 app.include_router(produccion_router)

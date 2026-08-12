@@ -10,7 +10,7 @@
         <div class="flex gap-4">
           <div class="form-group" style="flex: 1;">
             <label>Codigo</label>
-            <input v-model="form.codigo" type="text" placeholder="BOM-001" />
+            <input v-model="form.codigo" type="text" readonly class="input-readonly" placeholder="Se genera automaticamente" />
           </div>
           <div class="form-group" style="flex: 2;">
             <label>Nombre *</label>
@@ -20,8 +20,13 @@
 
         <div class="flex gap-4">
           <div class="form-group" style="flex: 1;">
-            <label>Producto ID *</label>
-            <input v-model.number="form.producto_id" type="number" required />
+            <label>Producto *</label>
+            <select v-model.number="form.producto_id" required>
+              <option :value="null">Seleccionar producto...</option>
+              <option v-for="prod in productos" :key="prod.id" :value="prod.id">
+                {{ prod.nombre }} ({{ prod.tipo === 'producto_final' ? 'PF' : 'MP' }})
+              </option>
+            </select>
           </div>
           <div class="form-group" style="flex: 1;">
             <label>Cantidad</label>
@@ -29,7 +34,7 @@
           </div>
           <div class="form-group" style="flex: 1;">
             <label>Unidad de Medida</label>
-            <input v-model="form.producto_uom" type="text" placeholder="unidades" />
+            <input v-model="form.producto_uom" type="text" placeholder="ej: unidades, kg, litros, metros" />
           </div>
         </div>
 
@@ -47,7 +52,7 @@
               <thead>
                 <tr>
                   <th>Secuencia</th>
-                  <th>Producto ID</th>
+                  <th>Producto</th>
                   <th>Cantidad</th>
                   <th>Unidad</th>
                   <th></th>
@@ -59,13 +64,18 @@
                     <input v-model.number="linea.secuencia" type="number" style="width: 80px;" />
                   </td>
                   <td>
-                    <input v-model.number="linea.producto_id" type="number" required style="width: 120px;" />
+                    <select v-model.number="linea.producto_id" required style="width: 100%;">
+                      <option :value="null">Seleccionar...</option>
+                      <option v-for="prod in productos" :key="prod.id" :value="prod.id">
+                        {{ prod.nombre }}
+                      </option>
+                    </select>
                   </td>
                   <td>
                     <input v-model.number="linea.cantidad" type="number" step="0.01" min="0" style="width: 100px;" />
                   </td>
                   <td>
-                    <input v-model="linea.producto_uom" type="text" style="width: 120px;" />
+                    <input v-model="linea.producto_uom" type="text" placeholder="ej: unidades, kg, litros" style="width: 120px;" />
                   </td>
                   <td>
                     <button type="button" class="btn btn-sm btn-danger" @click="removeLinea(index)">
@@ -91,6 +101,14 @@
         </div>
       </form>
     </div>
+
+    <button class="fab" @click="showProductoModal = true" title="Nuevo Producto">+</button>
+
+    <CreateProductoModal
+      :visible="showProductoModal"
+      @confirm="onProductoCreated"
+      @cancel="showProductoModal = false"
+    />
   </div>
 </template>
 
@@ -98,10 +116,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api/index.js'
+import CreateProductoModal from '../components/CreateProductoModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
+const productos = ref([])
+const showProductoModal = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -113,6 +134,18 @@ const form = ref({
   producto_uom: '',
   lineas: [],
 })
+
+async function loadFormData() {
+  try {
+    productos.value = await api.get('/api/productos')
+    if (!isEdit.value) {
+      const next = await api.get('/api/boms/next-code')
+      form.value.codigo = next.codigo
+    }
+  } catch (err) {
+    console.error('Error cargando datos:', err)
+  }
+}
 
 async function loadBom() {
   if (!isEdit.value) return
@@ -149,6 +182,12 @@ function removeLinea(index) {
   form.value.lineas.splice(index, 1)
 }
 
+function onProductoCreated(nuevo) {
+  productos.value.push(nuevo)
+  form.value.producto_id = nuevo.id
+  showProductoModal.value = false
+}
+
 async function handleSubmit() {
   loading.value = true
   try {
@@ -165,5 +204,8 @@ async function handleSubmit() {
   }
 }
 
-onMounted(loadBom)
+onMounted(async () => {
+  await loadFormData()
+  await loadBom()
+})
 </script>

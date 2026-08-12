@@ -12,7 +12,7 @@ class CentroTrabajoCreate(BaseModel):
     """Datos para crear un centro de trabajo."""
 
     nombre: str
-    codigo: str
+    codigo: str | None = None
     capacidad: Decimal = Decimal("1.0")
     costo_hora: Decimal = Decimal("0.0")
     activo: bool = True

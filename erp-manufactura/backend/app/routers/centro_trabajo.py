@@ -22,6 +22,12 @@ def listar_centros(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
     return CentroTrabajoService.get_all(db, skip=skip, limit=limit)
 
 
+@router.get("/next-code")
+def siguiente_codigo_centro(db: Session = Depends(get_db)):
+    """Retorna el proximo codigo que se generara para un nuevo centro."""
+    return {"codigo": CentroTrabajoService._generar_codigo(db)}
+
+
 @router.get("/{centro_id}", response_model=CentroTrabajoResponse)
 def obtener_centro(centro_id: int, db: Session = Depends(get_db)):
     """Obtiene un centro de trabajo por ID."""

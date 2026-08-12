@@ -11,7 +11,7 @@ from decimal import Decimal
 class OrdenTrabajoCreate(BaseModel):
     """Datos para crear una orden de trabajo."""
 
-    nombre: str
+    nombre: str | None = None
     produccion_id: int
     centro_trabajo_id: int | None = None
     duracion_esperada: Decimal | None = None

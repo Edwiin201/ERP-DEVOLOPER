@@ -16,7 +16,7 @@ class BOM(Base):
     id = Column(Integer, primary_key=True, index=True)
     codigo = Column(String(50), nullable=True)
     nombre = Column(String(200), nullable=False)
-    producto_id = Column(Integer, nullable=False, index=True)
+    producto_id = Column(Integer, ForeignKey("productos.id"), nullable=False, index=True)
     cantidad = Column(Numeric(10, 2), default=1.0)
     producto_uom = Column(String(50), nullable=True)
     estado = Column(String(20), default="activo")
@@ -25,6 +25,7 @@ class BOM(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relaciones
+    producto = relationship("Producto", back_populates="boms")
     lineas = relationship(
         "BOMLinea",
         back_populates="bom",
@@ -44,13 +45,14 @@ class BOMLinea(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     bom_id = Column(Integer, ForeignKey("boms.id", ondelete="CASCADE"), nullable=False)
-    producto_id = Column(Integer, nullable=False)
+    producto_id = Column(Integer, ForeignKey("productos.id"), nullable=False)
     cantidad = Column(Numeric(10, 2), default=1.0)
     producto_uom = Column(String(50), nullable=True)
     secuencia = Column(Integer, default=10)
 
     # Relaciones
     bom = relationship("BOM", back_populates="lineas")
+    producto = relationship("Producto", back_populates="bom_lineas")
 
     def __repr__(self):
         return f"<BOMLinea(id={self.id}, bom_id={self.bom_id}, producto_id={self.producto_id})>"

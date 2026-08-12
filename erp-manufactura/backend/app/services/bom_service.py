@@ -4,7 +4,7 @@ Manja creacion/actualizacion con lineas anidadas en transaccion.
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 from fastapi import HTTPException
 from app.models.bom import BOM, BOMLinea
 from app.models.produccion import Produccion
@@ -13,6 +13,14 @@ from app.schemas.bom import BOMCreate, BOMUpdate
 
 class BOMService:
     """CRUD + activar/archivar para BOMs."""
+
+    @staticmethod
+    def _generar_codigo(db: Session) -> str:
+        """Genera codigo automatico tipo 'BOM-00001' basado en el count actual."""
+        stmt = select(func.count(BOM.id))
+        total = db.scalar(stmt) or 0
+        secuencia = total + 1
+        return f"BOM-{secuencia:05d}"
 
     @staticmethod
     def get_all(db: Session, skip: int = 0, limit: int = 100) -> list[BOM]:
@@ -27,9 +35,10 @@ class BOMService:
 
     @staticmethod
     def create(db: Session, data: BOMCreate) -> BOM:
-        """Crea un BOM con sus lineas en una transaccion."""
-        # Crear el BOM principal
+        """Crea un BOM con codigo auto-generado y sus lineas en una transaccion."""
+        codigo = BOMService._generar_codigo(db)
         bom_data = data.model_dump(exclude={"lineas"})
+        bom_data["codigo"] = codigo
         bom = BOM(**bom_data)
         db.add(bom)
         db.flush()  # Obtener ID del BOM

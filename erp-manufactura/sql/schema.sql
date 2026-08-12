@@ -5,7 +5,16 @@
 -- ordenes de trabajo y centros de trabajo.
 -- ============================================
 
--- 1. Centros de Trabajo
+-- 1. Productos (referencia para todas las entidades)
+CREATE TABLE productos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(200) NOT NULL,
+    tipo VARCHAR(20) DEFAULT 'producto_final',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 2. Centros de Trabajo
 CREATE TABLE centros_trabajo (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -23,7 +32,7 @@ CREATE TABLE boms (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(50),
     nombre VARCHAR(200) NOT NULL,
-    producto_id INTEGER NOT NULL,
+    producto_id INTEGER NOT NULL REFERENCES productos(id),
     cantidad DECIMAL(10,2) DEFAULT 1.0,
     producto_uom VARCHAR(50),
     estado VARCHAR(20) DEFAULT 'activo',
@@ -36,7 +45,7 @@ CREATE TABLE boms (
 CREATE TABLE bom_lineas (
     id SERIAL PRIMARY KEY,
     bom_id INTEGER REFERENCES boms(id) ON DELETE CASCADE,
-    producto_id INTEGER NOT NULL,
+    producto_id INTEGER NOT NULL REFERENCES productos(id),
     cantidad DECIMAL(10,2) DEFAULT 1.0,
     producto_uom VARCHAR(50),
     secuencia INTEGER DEFAULT 10
@@ -46,7 +55,7 @@ CREATE TABLE bom_lineas (
 CREATE TABLE producciones (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL,
-    producto_id INTEGER NOT NULL,
+    producto_id INTEGER NOT NULL REFERENCES productos(id),
     cantidad DECIMAL(10,2) NOT NULL DEFAULT 1.0,
     producto_uom VARCHAR(50),
     bom_id INTEGER REFERENCES boms(id),
@@ -78,6 +87,7 @@ CREATE TABLE ordenes_trabajo (
 );
 
 -- Indices para busquedas frecuentes
+CREATE INDEX idx_productos_tipo ON productos(tipo);
 CREATE INDEX idx_boms_estado ON boms(estado);
 CREATE INDEX idx_boms_producto ON boms(producto_id);
 CREATE INDEX idx_bom_lineas_bom ON bom_lineas(bom_id);
@@ -96,6 +106,10 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_productos_updated_at
+    BEFORE UPDATE ON productos
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_centros_trabajo_updated_at
     BEFORE UPDATE ON centros_trabajo
